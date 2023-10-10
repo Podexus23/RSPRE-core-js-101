@@ -276,16 +276,25 @@ function reverseInteger(num) {
  *   5436468789016589 => false
  *   4916123456789012 => false
  */
+
 function isCreditCardNumber(ccn) {
-  const strCCN = `${ccn}`;
-  const lastDig = strCCN.slice(-1);
+  const line = `${ccn}`;
+  const isOdd = line.length % 2 === 0;
   let num = 0;
-  for (let i = strCCN.length - 2; i >= 0; i -= 1) {
-    if (i % 2 === 0) num += +strCCN[i];
-    else if (+strCCN[i] > 4) num += 2 * +strCCN[i] - 9;
-    else num += 2 * +strCCN[i];
+  for (let i = 0; i < line.length; i += 1) {
+    if (isOdd) {
+      if (i % 2 !== 0) {
+        num += +line[i];
+      } else if (+line[i] > 4) num += 2 * +line[i] - 9;
+      else num += 2 * +line[i];
+    } else if (!isOdd) {
+      if (i % 2 === 0) {
+        num += +line[i];
+      } else if (+line[i] > 4) num += 2 * +line[i] - 9;
+      else num += 2 * +line[i];
+    }
   }
-  return 10 - (num % 10) === +lastDig;
+  return num % 10 === 0;
 }
 
 /**
@@ -302,8 +311,12 @@ function isCreditCardNumber(ccn) {
  *   10000 ( 1+0+0+0+0 = 1 ) => 1
  *   165536 (1+6+5+5+3+6 = 26,  2+6 = 8) => 8
  */
-function getDigitalRoot(/* num */) {
-  throw new Error('Not implemented');
+function getDigitalRoot(num) {
+  let line = `${num}`;
+  while (line.length !== 1) {
+    line = `${line.split('').reduce((prev, acc) => prev + +acc, 0)}`;
+  }
+  return +line;
 }
 
 /**
@@ -327,8 +340,23 @@ function getDigitalRoot(/* num */) {
  *   '{)' = false
  *   '{[(<{[]}>)]}' = true
  */
-function isBracketsBalanced(/* str */) {
-  throw new Error('Not implemented');
+function isBracketsBalanced(str) {
+  const brackets = {
+    open: ['[', '{', '(', '<'],
+    close: [']', '}', ')', '>'],
+  };
+  const stack = [];
+  for (let i = 0; i < str.length; i += 1) {
+    if (brackets.close.includes(str[i])) {
+      if (stack.length === 0) return false;
+      if (brackets.close.indexOf(str[i]) === stack.at(-1)) {
+        stack.splice(-1, 1);
+      }
+    } else if (brackets.open.includes(str[i])) {
+      stack.push(brackets.open.indexOf(str[i]));
+    }
+  }
+  return stack.length === 0;
 }
 
 /**
@@ -351,8 +379,8 @@ function isBracketsBalanced(/* str */) {
  *    365, 4  => '11231'
  *    365, 10 => '365'
  */
-function toNaryString(/* num, n */) {
-  throw new Error('Not implemented');
+function toNaryString(num, rad) {
+  return num.toString(rad);
 }
 
 /**
@@ -367,8 +395,18 @@ function toNaryString(/* num, n */) {
  *   ['/web/assets/style.css', '/.bin/mocha',  '/read.me'] => '/'
  *   ['/web/favicon.ico', '/web-scripts/dump', '/verbalizer/logs'] => '/'
  */
-function getCommonDirectoryPath(/* pathes */) {
-  throw new Error('Not implemented');
+function getCommonDirectoryPath(pathes) {
+  const splitted = pathes.map((e) => e.split('/'));
+  let acc = [];
+  splitted.forEach((path) => {
+    const localAcc = [];
+    for (let i = 0; i < path.length; i += 1) {
+      if (splitted[0][i] === path[i]) localAcc.push(path[i]);
+    }
+    acc = localAcc;
+  });
+  if (acc.length < splitted[0].length) acc.push('');
+  return acc.join('/');
 }
 
 /**
@@ -389,8 +427,27 @@ function getCommonDirectoryPath(/* pathes */) {
  *                         [ 6 ]]
  *
  */
-function getMatrixProduct(/* m1, m2 */) {
-  throw new Error('Not implemented');
+function getMatrixProduct(m1, m2) {
+  const res = {
+    matrix: [],
+    rows: m1.length,
+    cols: m2[0].length,
+  };
+
+  res.matrix = new Array(res.cols)
+    .fill(0)
+    .map(() => new Array(res.rows).fill(0));
+
+  for (let i = 0; i < res.rows; i += 1) {
+    for (let j = 0; j < res.cols; j += 1) {
+      res.matrix[i][j] = 0;
+      for (let k = 0; k < m2.length; k += 1) {
+        res.matrix[i][j] += m1[i][k] * m2[k][j];
+      }
+    }
+  }
+
+  return res.matrix;
 }
 
 /**
@@ -423,8 +480,31 @@ function getMatrixProduct(/* m1, m2 */) {
  *    [    ,   ,    ]]
  *
  */
-function evaluateTicTacToePosition(/* position */) {
-  throw new Error('Not implemented');
+function evaluateTicTacToePosition(pos) {
+  const cr1 = [pos[0][0], pos[1][1], pos[2][2]];
+  const state1 = cr1.every((e) => e === 'X') || cr1.every((e) => e === '0');
+  if (state1 && cr1.length === 3) {
+    return cr1[0];
+  }
+
+  const cr2 = [pos[0][2], pos[1][1], pos[2][0]];
+  const state2 = cr2.every((e) => e === 'X') || cr2.every((e) => e === '0');
+  if (state2 && cr2.length === 3) {
+    return cr2[0];
+  }
+
+  for (let i = 0; i < pos.length; i += 1) {
+    const hr = pos[i].every((e) => e === 'X') || pos[i].every((e) => e === '0');
+    if (hr && pos[i].length === 3) {
+      return pos[i][0];
+    }
+    const col = [pos[0][i], pos[1][i], pos[2][i]];
+    const state3 = col.every((e) => e === 'X') || col.every((e) => e === '0');
+    if (state3 && col.length === 3) {
+      return col[0];
+    }
+  }
+  return undefined;
 }
 
 module.exports = {
